@@ -103,7 +103,7 @@ def setup():
 def draw():
     fade_background()
     scene_controller.step()
-    saveFrame("study02-####.tif")
+    #saveFrame("study02-####.tif")
 
 def mousePressed():
     scene_controller.toggle_loop()
