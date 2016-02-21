@@ -35,6 +35,25 @@ scene_controller = SceneController()
 
 BG_COLOR_RGB = (0, 0, 0, 30)
 
+_r3 = sqrt(3)
+
+def create_star6(w, color_prm, ang=0):
+    star = createShape(GROUP)
+    hw = w/2
+    hwr3 = hw * _r3
+    invhwr3 = hw / _r3
+    noStroke()
+    t1 = createShape(TRIANGLE, 0, 0, w, 0, hw, -hwr3)
+    t1.translate(-hw, invhwr3)
+    t1.setFill(color(*color_prm))
+    t2 = createShape(TRIANGLE, 0, 0, w, 0, hw, hwr3)
+    t2.translate(-hw, -invhwr3)
+    t2.setFill(color(*color_prm))
+    star.addChild(t1)
+    star.addChild(t2)
+    star.rotate(ang)
+    return star
+
 def fade_background():
     noStroke()
     blendMode(BLEND)
