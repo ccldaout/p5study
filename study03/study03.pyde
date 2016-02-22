@@ -133,21 +133,22 @@ def setup():
     imageMode(CENTER)
     background(*BG_COLOR_RGB[:3])
     global star6
-    star6 = create_star6(20, (120, 120, 120, 20), ang=HALF_PI/8)
-    steps = [-0.005, -0.004, -0.003, -0.002, 0.002, 0.003, 0.004, 0.005]
-    for _ in xrange(5):
-        light = create_light(60, random(1), random(1), random(1))
+    star6 = create_star6(20, (120, 120, 120, 30), ang=HALF_PI/8)
+    steps = [-0.007, -0.004, 0.003, 0.007]
+    sign = [1, -1]
+    for i in xrange(10):
+        light = create_light(100, random(0.1, 0.9), random(0.1, 0.9), random(0.1, 0.9))
         scene_controller.add_generator(actor(light,
-                                             width/2, height/2, 130,
+                                             width/2, height/2, 140,
                                              (random(0, TWO_PI),
-                                              steps[int(random(len(steps)-0.1))],
-                                              steps[int(random(len(steps)-0.1))],
-                                              steps[int(random(len(steps)-0.1))])))
+                                              sign[i % 2] * HALF_PI/40,
+                                              steps[int(random(len(steps)-0.9))],
+                                              steps[int(random(len(steps)-0.9))])))
     
 def draw():
     fade_background()
     scene_controller.step()
-    #saveFrame("study02-####.tif")
+    saveFrame("study-####.tif")
 
 def mousePressed():
     scene_controller.toggle_loop()
