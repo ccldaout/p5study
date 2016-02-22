@@ -74,12 +74,12 @@ def create_light(isize, rPower, gPower, bPower):
     return img
 
 def particles(radius, oang, ostep, scl):
-    cnt = 32
+    cnt = 500
     for _ in xrange(cnt):
-        r = radius + (radius/10) * (randomGaussian() - 0.5)
-        o = oang - (ostep * random(4,16))
+        r = radius + (radius/0.5) * (randomGaussian() - 0.5)
+        o = oang - (ostep * random(4, 25))
     	x, y = r * cos(o), r * sin(o)
-	w = scl * random(2, 3)
+	w = scl * random(1, 4)
 	shape(star6, x, y, w, w)	
 
 def actor(lightimg, center_x, center_y, radius, stepangles):
@@ -132,7 +132,7 @@ def setup():
     imageMode(CENTER)
     background(*BG_COLOR_RGB[:3])
     global star6
-    star6 = create_star6(20, (150, 150, 150, 20), ang=HALF_PI/8)
+    star6 = create_star6(20, (120, 120, 120, 20), ang=HALF_PI/8)
     scene_controller.add_generator(actor(create_light(100, 0.1, 0.5, 0.7),
                                          200, 200, 130,
                                          (HALF_PI, HALF_PI/40, 0.001, 0.005)))
