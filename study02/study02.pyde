@@ -73,12 +73,13 @@ def create_light(isize, rPower, gPower, bPower):
             img.pixels[x + y * isize] = color(r, g, b)
     return img
 
-def particles(dist, size):
+def particles(radius, oang, ostep, scl):
     cnt = 32
     for _ in xrange(cnt):
-    	x = random(-dist/2, dist/2)
-    	y = random(-dist/2, dist/2)
-	w = random(size, size*2)
+        r = radius + (radius/10) * (randomGaussian() - 0.5)
+        o = oang - (ostep * random(4,16))
+    	x, y = r * cos(o), r * sin(o)
+	w = scl * random(2, 3)
 	shape(star6, x, y, w, w)	
 
 def actor(lightimg, center_x, center_y, radius, stepangles):
@@ -92,11 +93,11 @@ def actor(lightimg, center_x, center_y, radius, stepangles):
         translate(center_x, center_y)
         rotateX(xang)
         rotateY(yang)
-        translate(radius*cos(oang), radius*sin(oang))
-        rotateX(-xang)
-        rotateY(-yang)
-        scale(scl)
-        particles(radius/1.5, 2)
+        #translate(radius*cos(oang), radius*sin(oang))
+        #rotateX(-xang)
+        #rotateY(-yang)
+        #scale(scl)
+        particles(radius, oang, ostep, scl)
         popMatrix()
         
         pushMatrix()        
