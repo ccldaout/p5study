@@ -76,10 +76,10 @@ def create_light(isize, rPower, gPower, bPower):
 def particles(radius, oang, ostep, scl):
     cnt = 500
     for _ in xrange(cnt):
-        r = radius + 6 * (randomGaussian() - 0.5)
+        r = radius + 8 * (randomGaussian() - 0.5)
         o = oang - (ostep * random(4, 120))
     	x, y = r * cos(o), r * sin(o)
-	w = scl * random(1, 4)
+	w = scl * random(1, 8)
 	shape(star6, x, y, w, w)	
 
 def actor(lightimg, center_x, center_y, radius, stepangles):
@@ -87,9 +87,9 @@ def actor(lightimg, center_x, center_y, radius, stepangles):
     oang, ostep, xstep, ystep = stepangles
     scl = 1.0
     while True:
-        blendMode(LIGHTEST)
-        
+             
         pushMatrix()
+        blendMode(ADD)
         translate(center_x, center_y)
         rotateX(xang)
         rotateY(yang)
@@ -100,7 +100,8 @@ def actor(lightimg, center_x, center_y, radius, stepangles):
         particles(radius, oang, ostep, scl)
         popMatrix()
         
-        pushMatrix()        
+        pushMatrix()
+        blendMode(LIGHTEST)        
         translate(center_x, center_y)
         oang += ostep
         xang += xstep
