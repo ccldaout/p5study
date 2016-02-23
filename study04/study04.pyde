@@ -7,18 +7,18 @@ def message():
     cnt = 15
     for n in xrange(cnt):
         fill(color(50+n*(150/cnt), 0, 30))
-        text("Happy Birthday", width/2, height/2, n)
+        text("Happy Birthday", width/2, height*0.66, n)
 
 def setup():
-    size(550, 200, P3D)
+    size(600, 400, P3D)
     textsetup()
     blendMode(REPLACE)
     colorMode(RGB)
 
 def action():
-    cnt = 50
+    cnt = 60
     for n in xrange(cnt):
-        camera(50+(450/cnt)*n, 120, 50, 250, 150, 0, 0, 1, 0)
+        camera(0+(width/cnt)*n, height*0.9, 80, 250, 200, 0, 0, 1, 0)
         message()
         yield
 
