@@ -1,11 +1,22 @@
 def setup():
-    size(300, 300)
-    global img
-    img = loadImage("drink_taru.png")
+    size(500, 200, P3D)
+    background(0)
+    textFont(createFont("Edwardian Script ITC", 100))
+    textMode(SHAPE)
+    textAlign(CENTER, CENTER)
+    fill(255)
+    blendMode(REPLACE)
+    camera(250, 110, 300, 250, 100, 50, 0, -1, 0)
+
+def action():
+    for n in xrange(10):
+        text("Happy Birthday", width/2, height/2, n*2)
+        yield
+
+action = action()
 
 def draw():
-    rw = float(width) / img.width
-    rh = float(height) / img.height
-    scale(min(rw, rh))
-    image(img, 0, 0)
-    noLoop()
+    try:
+        action.next()
+    except:
+        noLoop()
