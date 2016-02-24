@@ -139,7 +139,7 @@ class Controller(BaseController):
         textMode(SHAPE)
         textAlign(CENTER, CENTER)
         frameRate(30)
-        self.save_frame = False
+        #self.save_frame = True
         self._b_ratio = 0.0
         self._fadeout = False
 
@@ -151,20 +151,20 @@ class Controller(BaseController):
         foc_x, foc_y, foc_z = width/2, height/2, 0
         eye_x, eye_y, eye_z = 0, height*0.8, 80
 
-        cnt = frameRate * 5
+        cnt = frameRate * 6
         for _, ratio in range_curved(cnt):
             eye_x = width * ratio
             camera(eye_x, eye_y, eye_z, foc_x, foc_y, foc_z, 0, 1, 0)
             yield
 
-        cnt = frameRate * 2
+        cnt = frameRate * 3
         for _, ratio in range_curved(cnt):
             eye_x = width * (1 - 0.5 * ratio)
             eye_y = height*0.8 * (1 - ratio)
             camera(eye_x, eye_y, eye_z, foc_x, foc_y, foc_z, 0, 1, 0)
             yield
 
-        cnt = frameRate * 5
+        cnt = frameRate * 6
         inifoc_y = foc_y
         endfoc_y = height*0.7 
         for _, ratio in range_curved(cnt):
@@ -175,10 +175,10 @@ class Controller(BaseController):
             camera(eye_x, eye_y, eye_z, foc_x, foc_y, foc_z, 0, 1, 0)
             yield
         
-        for _ in xrange(frameRate * 3):
+        for _ in xrange(frameRate * 2):
             yield
         self._fadeout = True
-        cnt = frameRate * 10
+        cnt = frameRate * 6
         for _, ratio in range_curved(cnt):
             self._b_ratio = 1 - ratio
             yield
@@ -188,11 +188,11 @@ class Controller(BaseController):
         cnt = 12
         for n in xrange(cnt):
             h = 350 - 40*self._b_ratio
-            s = 65+30*(n/float(cnt))
+            s = 30+70*(n/float(cnt))
             if self._fadeout:
                 b = 100*self._b_ratio
             else:
-                b = 20 + 80*self._b_ratio
+                b = 30 + 70*self._b_ratio
             fill(color(h, s, b))
             text("Happy Birthday", width/2, height*0.66, n)
         return True

@@ -9,13 +9,6 @@ SIZE_PARAMS = (300, 300, P2D)
 
 _controller_object = None
 
-def fade_background():
-    noStroke()
-    blendMode(BLEND)
-    fill(*BG_COLOR_RGB)
-    rectMode(SCREEN)
-    rect(0, 0, width, height)
-
 def add_actor():
     n = [0]
     def _add_actor(f):
@@ -47,7 +40,8 @@ class BaseController(object):
 
     def __generator(self, func):
         while True:
-            func()
+            if not func():
+                return
             yield
         
     def add_actor(self, obj):
@@ -110,6 +104,24 @@ def draw():
 
 def mousePressed():
     _controller_object.mousePressed()
+
+def fade_background(bgcolor=color(0,10)):
+    noStroke()
+    blendMode(BLEND)
+    fill(bgcolor)
+    rectMode(SCREEN)
+    rect(0, 0, width, height)
+
+def movement_curve(x):
+    x = 2*x - 1
+    return 0.5 - x * (x*x - 3) / 4
+
+def range_curved(n, curve=movement_curve):
+    n -= 1
+    for i in xrange(n+1):
+        x = float(i)/n
+        y = curve(x)
+        yield i, y
 
 #----------------------------------------------------------------------------------------------
 # application
@@ -201,6 +213,7 @@ class Controller(BaseController):
         hint(DISABLE_DEPTH_TEST)
         blendMode(ADD)
         imageMode(CENTER)
+        frameRate(30)
         background(*BG_COLOR_RGB[:3])
         global star6
         star6 = create_star6(20, (120, 120, 120, 30), ang=HALF_PI/8)
@@ -220,4 +233,4 @@ class Controller(BaseController):
                                   steps[int(random(len(steps)-0.9))])))
     
     def pre_draw(self):
-        fade_background()
+        fade_background(color(*BG_COLOR_RGB))
