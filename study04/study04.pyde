@@ -36,7 +36,7 @@ class BaseController(object):
         self._acts = []
         for name, attr in _ins.getmembers(self):
             if hasattr(attr, _ATTR_INITIAL_ACTOR) and _ins.isgeneratorfunction(attr):
-                self._acts.append(attr())
+                self.add_actor(attr())
         return self
         
     def add_actor(self, gen):
@@ -103,7 +103,6 @@ SIZE_PARAMS = (600, 400, P3D)
 class Controller(BaseController):
 
     def mysetup(self):
-        size(600, 400, P3D)
         blendMode(REPLACE)
         colorMode(RGB)
         textFont(createFont("Edwardian Script ITC", 90))
@@ -120,7 +119,7 @@ class Controller(BaseController):
             text("Happy Birthday", width/2, height*0.66, n)
 
     @initial_actor
-    def action(self):
+    def actor(self):
         cnt = 60
         for n in xrange(cnt):
             camera(0+(width/cnt)*n, height*0.9, 80, 250, 200, 0, 0, 1, 0)

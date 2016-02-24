@@ -1,38 +1,103 @@
-class SceneController(object):
-    def __init__(self):
-        self._gens = []
+#----------------------------------------------------------------------------------------------
+# common 
+#----------------------------------------------------------------------------------------------
+
+import inspect as _ins
+_ATTR_INITIAL_ACTOR = '_initial_actor_'
+
+SIZE_PARAMS = (300, 300, P2D)
+
+_controller_object = None
+
+def fade_background():
+    noStroke()
+    blendMode(BLEND)
+    fill(*BG_COLOR_RGB)
+    rectMode(SCREEN)
+    rect(0, 0, width, height)
+
+def initial_actor(f):
+    if not _ins.isgeneratorfunction(f):
+        raise 'actor function must be generator function'
+    setattr(f, _ATTR_INITIAL_ACTOR, True)
+    return f
+
+def setup_controller(controller_class):
+    controller = controller_class()
+    global _controller_object
+    _controller_object = controller
+    return controller_class
+
+class BaseController(object):
+    def __new__(cls):
+        self = super(BaseController, cls).__new__(cls)
         self._loop = True
+        self.save_frame = False
+        self._acts = []
+        for name, attr in _ins.getmembers(self):
+            if hasattr(attr, _ATTR_INITIAL_ACTOR) and _ins.isgeneratorfunction(attr):
+                self.add_actor(attr())
+        return self
         
-    def add_generator(self, gen):
-        self._gens.append(gen)
+    def add_actor(self, gen):
+        self._acts.append(gen)
         
-    def step(self):
-        nextgens = []
-        for gen in self._gens:
+    def __step(self):
+        nextacts = []
+        for gen in self._acts:
             try:
                 ret = gen.next()
-                nextgens.append(gen)
+                nextacts.append(gen)
                 if isinstance(ret, (tuple, list)):
-                    nextgens.extend(ret)
+                    nextacts.extend(ret)
                 elif ret is not None:
-                    nextgens.append(ret)
+                    nextacts.append(ret)
             except StopIteration as e:
                 pass
-        self._gens = nextgens
+        self._acts = nextacts
         
-    def toggle_loop(self):
+    def __toggle_loop(self):
         self._loop = not self._loop
         print 'toggle_loop:', self._loop
         if self._loop:
             loop()
         else:
             noLoop()
+
+    def mousePressed(self):
+        self.__toggle_loop()
         
-scene_controller = SceneController()
+    def mysetup(self):
+        pass
+
+    def setup(self):
+        self.mysetup()
+
+    def pre_draw(self):
+        pass
+
+    def draw(self):
+        self.pre_draw()
+        self.__step()
+        if self.save_frame:
+            saveFrame("frame-####.tif")
+ 
+def setup():
+    # [REMARK] The size() must be at first line of setup function.
+    size(*SIZE_PARAMS)
+    _controller_object.setup()
+
+def draw():
+    _controller_object.draw()
+
+def mousePressed():
+    _controller_object.mousePressed()
 
 #----------------------------------------------------------------------------------------------
+# application
 #----------------------------------------------------------------------------------------------
 
+SIZE_PARAMS = (400, 400, P3D)
 BG_COLOR_RGB = (0, 0, 0, 30)
 
 _r3 = sqrt(3)
@@ -54,13 +119,6 @@ def create_star6(w, color_prm, ang=0):
     star.rotate(ang)
     return star
 
-def fade_background():
-    noStroke()
-    blendMode(BLEND)
-    fill(*BG_COLOR_RGB)
-    rectMode(SCREEN)
-    rect(0, 0, width, height)
-    
 def create_light(isize, rPower, gPower, bPower):
     center = isize / 2.0
     img = createImage(isize, isize, RGB)
@@ -78,9 +136,9 @@ def particles(radius, oang, ostep, scl):
     for _ in xrange(cnt):
         r = radius + 8 * (randomGaussian() - 0.5)
         o = oang - (ostep * random(4, 120))
-    	x, y = r * cos(o), r * sin(o)
-	w = scl * random(1, 8)
-	shape(star6, x, y, w, w)	
+        x, y = r * cos(o), r * sin(o)
+        w = scl * random(1, 8)
+        shape(star6, x, y, w, w)  
 
 def actor(lightimg, center_x, center_y, radius, stepangles):
     xang = yang = 0
@@ -122,33 +180,33 @@ def actor(lightimg, center_x, center_y, radius, stepangles):
                 return
         yield
 
-#----------------------------------------------------------------------------------------------
-#----------------------------------------------------------------------------------------------
+@setup_controller
+class Controller(BaseController):
 
-def setup():
-    #fullScreen(P3D)
-    size(400, 400, P3D)
-    hint(DISABLE_DEPTH_TEST)
-    blendMode(ADD)
-    imageMode(CENTER)
-    background(*BG_COLOR_RGB[:3])
-    global star6
-    star6 = create_star6(20, (120, 120, 120, 30), ang=HALF_PI/8)
-    steps = [-0.007, -0.006, -0.005, -0.004, 0.004, 0.005, 0.006, 0.007]
-    sign = [1, -1]
-    for i in xrange(20):
-        light = create_light(40, random(0.1, 0.9), random(0.1, 0.9), random(0.1, 0.9))
-        scene_controller.add_generator(actor(light,
-                                             width/2, height/2, 140,
-                                             (random(0, TWO_PI),
-                                              sign[i % 2] * HALF_PI/40,
-                                              steps[int(random(len(steps)-0.9))],
-                                              steps[int(random(len(steps)-0.9))])))
+    def mysetup(self):
+        hint(DISABLE_DEPTH_TEST)
+        blendMode(ADD)
+        imageMode(CENTER)
+        background(*BG_COLOR_RGB[:3])
+        global star6
+        star6 = create_star6(20, (120, 120, 120, 30), ang=HALF_PI/8)
+        steps = [-0.007, -0.006, -0.005, -0.004, 0.004, 0.005, 0.006, 0.007]
+        sign = [1, -1]
+        for i in xrange(20):
+            light = create_light(40,
+                                 random(0.1, 0.9),
+                                 random(0.1, 0.9),
+                                 random(0.1, 0.9))
+            self.add_actor(actor(light,
+                                 width/2, height/2,
+                                140,
+                                 (random(0, TWO_PI),
+                                  sign[i % 2] * HALF_PI/40,
+                                  steps[int(random(len(steps)-0.9))],
+                                  steps[int(random(len(steps)-0.9))])))
     
-def draw():
-    fade_background()
-    scene_controller.step()
-    saveFrame("study-####.tif")
+    def pre_draw(self):
+        fade_background()
 
-def mousePressed():
-    scene_controller.toggle_loop()
+    def actor(self):
+        pass
