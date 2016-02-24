@@ -119,12 +119,12 @@ def movement_curve(x):
     x = 2*x - 1
     return 0.5 - x * (x*x - 3) / 4
 
-def range_curved(ini, end, n, curve=movement_curve):
-    s = end - ini
+def range_curved(n, curve=movement_curve):
+    n -= 1
     for i in xrange(n+1):
         x = float(i)/n
         y = curve(x)
-        yield ini + s * y
+        yield i, y
 
 SIZE_PARAMS = (600, 400, P3D)
 
@@ -148,15 +148,16 @@ class Controller(BaseController):
         eye_z = 80
 
         cnt = 60
-        for eye_x in range_curved(0, width, cnt):
-            camera(eye_x, eye_y, eye_z, width/2, height/2, 0, 0, 1, 0)
+        for _, ratio in range_curved(cnt):
+            eye_x = width * ratio
+            camera(eye_x, eye_y, eye_z, foc_x, foc_y, foc_z, 0, 1, 0)
             yield
 
         cnt = 30
-        for ratio in range_curved(0, 1, cnt):
+        for _, ratio in range_curved(cnt):
             eye_x = width * (1 - 0.5 * ratio)
-            eye_y = height*0.9 * (1 - ratio)
-            camera(eye_x, eye_y, eye_z, width/2, height/2, 0, 0, 1, 0)
+            eye_y = height*0.8 * (1 - ratio)
+            camera(eye_x, eye_y, eye_z, foc_x, foc_y, foc_z, 0, 1, 0)
             yield
 
     @add_actor
