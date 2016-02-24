@@ -47,7 +47,8 @@ class BaseController(object):
 
     def __generator(self, func):
         while True:
-            func()
+            if not func():
+                return
             yield
         
     def add_actor(self, obj):
@@ -137,9 +138,14 @@ class Controller(BaseController):
         textFont(createFont("Edwardian Script ITC", 90))
         textMode(SHAPE)
         textAlign(CENTER, CENTER)
+        self._b_ratio = 0.0
+        self._fadeout = False
 
     def pre_draw(self):
-        background(0)
+        if self._fadeout:
+            fade_background()
+        else:
+            background(0)
 
     @add_actor
     def camera(self):
@@ -159,19 +165,26 @@ class Controller(BaseController):
             camera(eye_x, eye_y, eye_z, foc_x, foc_y, foc_z, 0, 1, 0)
             yield
 
-        cnt = 45
+        cnt = 50
         inifoc_y = foc_y
         endfoc_y = height*0.7 
         for _, ratio in range_curved(cnt):
+            self._b_ratio = ratio
             eye_y = height*0.8 * ratio
             eye_z = 80 + (300 - 80) * ratio
             foc_y = inifoc_y + (endfoc_y - inifoc_y) * ratio
             camera(eye_x, eye_y, eye_z, foc_x, foc_y, foc_z, 0, 1, 0)
             yield
+        
+        self._fadeout = True
 
     @add_actor
     def textobject(self):
-        cnt = 15
+        cnt = 12
         for n in xrange(cnt):
-            fill(color(350, 65+30*(n/float(cnt)), 30))
+            h = 350 - 50*self._b_ratio
+            s = 65+30*(n/float(cnt))
+            b = 20 + 80*self._b_ratio
+            fill(color(h, s, b))
             text("Happy Birthday", width/2, height*0.66, n)
+        return (not self._fadeout)
