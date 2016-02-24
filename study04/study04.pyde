@@ -123,7 +123,7 @@ def range_curved(ini, end, n, curve=movement_curve):
     s = end - ini
     for i in xrange(n+1):
         x = float(i)/n
-        y = slice_curve(x)
+        y = curve(x)
         yield ini + s * y
 
 SIZE_PARAMS = (600, 400, P3D)
