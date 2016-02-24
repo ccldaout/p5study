@@ -104,7 +104,7 @@ class Controller(BaseController):
 
     def mysetup(self):
         blendMode(REPLACE)
-        colorMode(RGB)
+        colorMode(HSB, 360, 100, 100)
         textFont(createFont("Edwardian Script ITC", 90))
         textMode(SHAPE)
         textAlign(CENTER, CENTER)
@@ -115,13 +115,29 @@ class Controller(BaseController):
     def put_text(self):
         cnt = 15
         for n in xrange(cnt):
-            fill(color(50+n*(150/cnt), 0, 30))
+            fill(color(350, 65+30*(n/float(cnt)), 80))
             text("Happy Birthday", width/2, height*0.66, n)
 
     @initial_actor
     def actor(self):
         cnt = 60
+        eye_y = height * 0.9
+        eye_z = 80
         for n in xrange(cnt):
-            camera(0+(width/cnt)*n, height*0.9, 80, 250, 200, 0, 0, 1, 0)
+            eye_x = width * n / float(cnt)
+            camera(eye_x, eye_y, eye_z,
+                   width/2, height/2, 0,
+                   0, 1, 0)
             self.put_text()
             yield
+        cnt = 30
+        for n in xrange(cnt):
+            eye_x = width * (1 - 0.5*n/float(cnt))
+            eye_y = height*0.9 * (1 - n/float(cnt))
+            camera(eye_x, eye_y, eye_z,
+                   width/2, height/2, 0,
+                   0, 1, 0)
+            self.put_text()
+            yield
+        self.put_text()
+        noLoop()
