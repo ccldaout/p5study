@@ -16,12 +16,15 @@ def fade_background():
     rectMode(SCREEN)
     rect(0, 0, width, height)
 
-def initial_actor(f):
-    if not _ins.isgeneratorfunction(f):
-        raise 'actor function must be generator function'
-    setattr(f, _ATTR_INITIAL_ACTOR, True)
-    return f
-
+def add_actor():
+    n = [0]
+    def _add_actor(f):
+        setattr(f, _ATTR_INITIAL_ACTOR, n[0])
+        n[0] += 1
+        return f
+    return _add_actor
+add_actor = add_actor()
+    
 def setup_controller(controller_class):
     controller = controller_class()
     global _controller_object
@@ -34,13 +37,28 @@ class BaseController(object):
         self._loop = True
         self.save_frame = False
         self._acts = []
-        for name, attr in _ins.getmembers(self):
-            if hasattr(attr, _ATTR_INITIAL_ACTOR) and _ins.isgeneratorfunction(attr):
-                self.add_actor(attr())
+        def get_actors():
+            for _, attr in _ins.getmembers(self):
+                if hasattr(attr, _ATTR_INITIAL_ACTOR):
+                    yield getattr(attr, _ATTR_INITIAL_ACTOR), attr
+        for _, attr in sorted(list(get_actors())):
+            self.add_actor(attr)
         return self
+
+    def __generator(self, func):
+        while True:
+            func()
+            yield
         
-    def add_actor(self, gen):
-        self._acts.append(gen)
+    def add_actor(self, obj):
+        if _ins.isgenerator(obj):
+            self._acts.append(obj)
+        elif _ins.isgeneratorfunction(obj):
+            self._acts.append(obj())
+        elif callable(obj):
+            self._acts.append(self.__generator(obj))
+        else:
+            raise Exception('obj must be one of generator/generator function/function')
         
     def __step(self):
         nextacts = []
@@ -151,10 +169,6 @@ def actor(lightimg, center_x, center_y, radius, stepangles):
         translate(center_x, center_y)
         rotateX(xang)
         rotateY(yang)
-        #translate(radius*cos(oang), radius*sin(oang))
-        #rotateX(-xang)
-        #rotateY(-yang)
-        #scale(scl)
         particles(radius, oang, ostep, scl)
         popMatrix()
         
@@ -207,6 +221,3 @@ class Controller(BaseController):
     
     def pre_draw(self):
         fade_background()
-
-    def actor(self):
-        pass

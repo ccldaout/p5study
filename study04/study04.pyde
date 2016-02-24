@@ -16,12 +16,15 @@ def fade_background():
     rectMode(SCREEN)
     rect(0, 0, width, height)
 
-def initial_actor(f):
-    if not _ins.isgeneratorfunction(f):
-        raise 'actor function must be generator function'
-    setattr(f, _ATTR_INITIAL_ACTOR, True)
-    return f
-
+def add_actor():
+    n = [0]
+    def _add_actor(f):
+        setattr(f, _ATTR_INITIAL_ACTOR, n[0])
+        n[0] += 1
+        return f
+    return _add_actor
+add_actor = add_actor()
+    
 def setup_controller(controller_class):
     controller = controller_class()
     global _controller_object
@@ -34,13 +37,28 @@ class BaseController(object):
         self._loop = True
         self.save_frame = False
         self._acts = []
-        for name, attr in _ins.getmembers(self):
-            if hasattr(attr, _ATTR_INITIAL_ACTOR) and _ins.isgeneratorfunction(attr):
-                self.add_actor(attr())
+        def get_actors():
+            for _, attr in _ins.getmembers(self):
+                if hasattr(attr, _ATTR_INITIAL_ACTOR):
+                    yield getattr(attr, _ATTR_INITIAL_ACTOR), attr
+        for _, attr in sorted(list(get_actors())):
+            self.add_actor(attr)
         return self
+
+    def __generator(self, func):
+        while True:
+            func()
+            yield
         
-    def add_actor(self, gen):
-        self._acts.append(gen)
+    def add_actor(self, obj):
+        if _ins.isgenerator(obj):
+            self._acts.append(obj)
+        elif _ins.isgeneratorfunction(obj):
+            self._acts.append(obj())
+        elif callable(obj):
+            self._acts.append(self.__generator(obj))
+        else:
+            raise Exception('obj must be one of generator/generator function/function')
         
     def __step(self):
         nextacts = []
@@ -112,32 +130,28 @@ class Controller(BaseController):
     def pre_draw(self):
         background(0)
 
-    def put_text(self):
-        cnt = 15
-        for n in xrange(cnt):
-            fill(color(350, 65+30*(n/float(cnt)), 80))
-            text("Happy Birthday", width/2, height*0.66, n)
-
-    @initial_actor
-    def actor(self):
-        cnt = 60
+    @add_actor
+    def camera(self):
+        foc_x, foc_y, foc_z = width/2, height/2, 0
         eye_y = height * 0.9
         eye_z = 80
+
+        cnt = 60
         for n in xrange(cnt):
             eye_x = width * n / float(cnt)
-            camera(eye_x, eye_y, eye_z,
-                   width/2, height/2, 0,
-                   0, 1, 0)
-            self.put_text()
+            camera(eye_x, eye_y, eye_z, width/2, height/2, 0, 0, 1, 0)
             yield
+
         cnt = 30
         for n in xrange(cnt):
             eye_x = width * (1 - 0.5*n/float(cnt))
             eye_y = height*0.9 * (1 - n/float(cnt))
-            camera(eye_x, eye_y, eye_z,
-                   width/2, height/2, 0,
-                   0, 1, 0)
-            self.put_text()
+            camera(eye_x, eye_y, eye_z, width/2, height/2, 0, 0, 1, 0)
             yield
-        self.put_text()
-        noLoop()
+
+    @add_actor
+    def textobject(self):
+        cnt = 15
+        for n in xrange(cnt):
+            fill(color(350, 65+30*(n/float(cnt)), 80))
+            text("Happy Birthday", width/2, height*0.66, n)
