@@ -5,6 +5,8 @@
 import inspect as _ins
 _ATTR_INITIAL_ACTOR = '_initial_actor_'
 
+SIZE_PARAMS = (300, 300, P2D)
+
 _controller_object = None
 
 def fade_background():
@@ -81,6 +83,8 @@ class BaseController(object):
             saveFrame("frame-####.tif")
  
 def setup():
+    # [REMARK] The size() must be at first line of setup function.
+    size(*SIZE_PARAMS)
     _controller_object.setup()
 
 def draw():
@@ -93,11 +97,10 @@ def mousePressed():
 # application
 #----------------------------------------------------------------------------------------------
 
+SIZE_PARAMS = (600, 400, P3D)
+
 @setup_controller
 class Controller(BaseController):
-    #def __new__(cls):
-    #    self = super(Controller, cls).__new__(cls)
-    #    return self
 
     def mysetup(self):
         size(600, 400, P3D)
