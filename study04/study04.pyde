@@ -9,13 +9,6 @@ SIZE_PARAMS = (300, 300, P2D)
 
 _controller_object = None
 
-def fade_background():
-    noStroke()
-    blendMode(BLEND)
-    fill(*BG_COLOR_RGB)
-    rectMode(SCREEN)
-    rect(0, 0, width, height)
-
 def add_actor():
     n = [0]
     def _add_actor(f):
@@ -112,9 +105,12 @@ def draw():
 def mousePressed():
     _controller_object.mousePressed()
 
-#----------------------------------------------------------------------------------------------
-# application
-#----------------------------------------------------------------------------------------------
+def fade_background(bgcolor=color(0,10)):
+    noStroke()
+    blendMode(BLEND)
+    fill(bgcolor)
+    rectMode(SCREEN)
+    rect(0, 0, width, height)
 
 def movement_curve(x):
     x = 2*x - 1
@@ -126,6 +122,10 @@ def range_curved(n, curve=movement_curve):
         x = float(i)/n
         y = curve(x)
         yield i, y
+
+#----------------------------------------------------------------------------------------------
+# application
+#----------------------------------------------------------------------------------------------
 
 SIZE_PARAMS = (600, 400, P3D)
 
@@ -142,10 +142,7 @@ class Controller(BaseController):
         self._fadeout = False
 
     def pre_draw(self):
-        if self._fadeout:
-            fade_background()
-        else:
-            background(0)
+        background(0)
 
     @add_actor
     def camera(self):
@@ -176,15 +173,23 @@ class Controller(BaseController):
             camera(eye_x, eye_y, eye_z, foc_x, foc_y, foc_z, 0, 1, 0)
             yield
         
+        for _ in xrange(frameRate):
+            yield
         self._fadeout = True
+        for _, ratio in range_curved(60):
+            self._b_ratio = 1 - ratio
+            yield
 
     @add_actor
     def textobject(self):
         cnt = 12
         for n in xrange(cnt):
-            h = 350 - 50*self._b_ratio
+            h = 350 - 40*self._b_ratio
             s = 65+30*(n/float(cnt))
-            b = 20 + 80*self._b_ratio
+            if self._fadeout:
+                b = 100*self._b_ratio
+            else:
+                b = 20 + 80*self._b_ratio
             fill(color(h, s, b))
             text("Happy Birthday", width/2, height*0.66, n)
-        return (not self._fadeout)
+        return True
