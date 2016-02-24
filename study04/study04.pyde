@@ -144,8 +144,7 @@ class Controller(BaseController):
     @add_actor
     def camera(self):
         foc_x, foc_y, foc_z = width/2, height/2, 0
-        eye_y = height * 0.9
-        eye_z = 80
+        eye_x, eye_y, eye_z = 0, height*0.8, 80
 
         cnt = 60
         for _, ratio in range_curved(cnt):
@@ -160,9 +159,19 @@ class Controller(BaseController):
             camera(eye_x, eye_y, eye_z, foc_x, foc_y, foc_z, 0, 1, 0)
             yield
 
+        cnt = 45
+        inifoc_y = foc_y
+        endfoc_y = height*0.7 
+        for _, ratio in range_curved(cnt):
+            eye_y = height*0.8 * ratio
+            eye_z = 80 + (300 - 80) * ratio
+            foc_y = inifoc_y + (endfoc_y - inifoc_y) * ratio
+            camera(eye_x, eye_y, eye_z, foc_x, foc_y, foc_z, 0, 1, 0)
+            yield
+
     @add_actor
     def textobject(self):
         cnt = 15
         for n in xrange(cnt):
-            fill(color(350, 65+30*(n/float(cnt)), 80))
+            fill(color(350, 65+30*(n/float(cnt)), 30))
             text("Happy Birthday", width/2, height*0.66, n)
