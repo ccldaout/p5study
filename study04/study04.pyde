@@ -133,12 +133,13 @@ SIZE_PARAMS = (600, 400, P3D)
 class Controller(BaseController):
 
     def mysetup(self):
+        self._fps = 10
+        frameRate(self._fps)
         blendMode(REPLACE)
         colorMode(HSB, 360, 100, 100)
         textFont(createFont("Edwardian Script ITC", 90))
         textMode(SHAPE)
         textAlign(CENTER, CENTER)
-        frameRate(30)
         #self.save_frame = True
         self._b_ratio = 0.0
         self._fadeout = False
@@ -151,20 +152,20 @@ class Controller(BaseController):
         foc_x, foc_y, foc_z = width/2, height/2, 0
         eye_x, eye_y, eye_z = 0, height*0.8, 80
 
-        cnt = frameRate * 6
+        cnt = self._fps * 6
         for _, ratio in range_curved(cnt):
             eye_x = width * ratio
             camera(eye_x, eye_y, eye_z, foc_x, foc_y, foc_z, 0, 1, 0)
             yield
 
-        cnt = frameRate * 3
+        cnt = self._fps * 3
         for _, ratio in range_curved(cnt):
             eye_x = width * (1 - 0.5 * ratio)
             eye_y = height*0.8 * (1 - ratio)
             camera(eye_x, eye_y, eye_z, foc_x, foc_y, foc_z, 0, 1, 0)
             yield
 
-        cnt = frameRate * 6
+        cnt = self._fps * 6
         inifoc_y = foc_y
         endfoc_y = height*0.7 
         for _, ratio in range_curved(cnt):
@@ -175,10 +176,10 @@ class Controller(BaseController):
             camera(eye_x, eye_y, eye_z, foc_x, foc_y, foc_z, 0, 1, 0)
             yield
         
-        for _ in xrange(frameRate * 2):
+        for _ in xrange(self._fps * 2):
             yield
         self._fadeout = True
-        cnt = frameRate * 6
+        cnt = self._fps * 6
         for _, ratio in range_curved(cnt):
             self._b_ratio = 1 - ratio
             yield
