@@ -138,6 +138,8 @@ class Controller(BaseController):
         textFont(createFont("Edwardian Script ITC", 90))
         textMode(SHAPE)
         textAlign(CENTER, CENTER)
+        frameRate(30)
+        self.save_frame = False
         self._b_ratio = 0.0
         self._fadeout = False
 
@@ -149,20 +151,20 @@ class Controller(BaseController):
         foc_x, foc_y, foc_z = width/2, height/2, 0
         eye_x, eye_y, eye_z = 0, height*0.8, 80
 
-        cnt = 60
+        cnt = frameRate * 5
         for _, ratio in range_curved(cnt):
             eye_x = width * ratio
             camera(eye_x, eye_y, eye_z, foc_x, foc_y, foc_z, 0, 1, 0)
             yield
 
-        cnt = 30
+        cnt = frameRate * 2
         for _, ratio in range_curved(cnt):
             eye_x = width * (1 - 0.5 * ratio)
             eye_y = height*0.8 * (1 - ratio)
             camera(eye_x, eye_y, eye_z, foc_x, foc_y, foc_z, 0, 1, 0)
             yield
 
-        cnt = 50
+        cnt = frameRate * 5
         inifoc_y = foc_y
         endfoc_y = height*0.7 
         for _, ratio in range_curved(cnt):
@@ -173,10 +175,11 @@ class Controller(BaseController):
             camera(eye_x, eye_y, eye_z, foc_x, foc_y, foc_z, 0, 1, 0)
             yield
         
-        for _ in xrange(frameRate):
+        for _ in xrange(frameRate * 3):
             yield
         self._fadeout = True
-        for _, ratio in range_curved(60):
+        cnt = frameRate * 10
+        for _, ratio in range_curved(cnt):
             self._b_ratio = 1 - ratio
             yield
 
