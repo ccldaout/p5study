@@ -115,7 +115,7 @@ def fade_background(bgcolor=color(0,10)):
     noStroke()
     blendMode(BLEND)
     fill(bgcolor)
-    rectMode(SCREEN)
+    rectMode(CORNER)
     rect(0, 0, width, height)
 
 def movement_curve(x):
@@ -211,7 +211,7 @@ def actor(lightimg, center_x, center_y, radius, stepangles):
                 return
         yield
 
-@setup_controller(600, 400, P3D, save_fps=0.0)
+@setup_controller(400, 400, P3D, save_fps=0.0)
 class Controller(BaseController):
 
     def mysetup(self):

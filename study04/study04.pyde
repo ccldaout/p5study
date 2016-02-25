@@ -115,7 +115,7 @@ def fade_background(bgcolor=color(0,10)):
     noStroke()
     blendMode(BLEND)
     fill(bgcolor)
-    rectMode(SCREEN)
+    rectMode(CORNER)
     rect(0, 0, width, height)
 
 def movement_curve(x):
