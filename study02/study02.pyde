@@ -1,152 +1,153 @@
-class SceneController(object):
-    def __init__(self):
-        self._gens = []
-        self._loop = True
+#----------------------------------------------------------------------------
+# common - personal framework
+#----------------------------------------------------------------------------
+
+_ATTR_INITIAL_ACTOR = '_initial_actor_'
+
+def add_actor():
+    n = [0]
+    def _add_actor(f):
+        setattr(f, _ATTR_INITIAL_ACTOR, n[0])
+        n[0] += 1
+        return f
+    return _add_actor
+add_actor = add_actor()
+    
+def setup_controller(width, height, mode=P2D, save_fps=0.0):
+    global _size_params
+    _size_params = (width, height, mode)
+    def _setup(controller_class):
+        controller = controller_class(save_fps)
+        global _controller_object
+        _controller_object = controller
+        return controller_class
+    return _setup
+    
+class BaseController(object):
+    import inspect as __inspect
+    
+    def __new__(cls, save_fps):
+        self = super(BaseController, cls).__new__(cls)
+        self.__loop = True
+        if save_fps < 1.0:
+            self.fps = 10
+            self.__save_frame = False
+        else:
+            self.fps = save_fps
+            self.__save_frame = True
+        self.__acts = []
+        def get_actors():
+            import inspect
+            for _, attr in self.__inspect.getmembers(self):
+                if hasattr(attr, _ATTR_INITIAL_ACTOR):
+                    yield getattr(attr, _ATTR_INITIAL_ACTOR), attr
+        for _, attr in sorted(list(get_actors())):
+            self.add_actor(attr)
+        return self
+
+    def __generator(self, func):
+        while func():
+            yield
         
-    def add_generator(self, gen):
-        self._gens.append(gen)
+    def add_actor(self, obj):
+        if self.__inspect.isgenerator(obj):
+            self.__acts.append(obj)
+        elif self.__inspect.isgeneratorfunction(obj):
+            self.__acts.append(obj())
+        elif callable(obj):
+            self.__acts.append(self.__generator(obj))
+        else:
+            raise Exception('obj must be one of generator/generator function/function')
         
-    def step(self):
-        nextgens = []
-        for gen in self._gens:
+    def __step(self):
+        nextacts = []
+        for gen in self.__acts:
             try:
                 ret = gen.next()
-                nextgens.append(gen)
+                nextacts.append(gen)
                 if isinstance(ret, (tuple, list)):
-                    nextgens.extend(ret)
+                    nextacts.extend(ret)
                 elif ret is not None:
-                    nextgens.append(ret)
+                    nextacts.append(ret)
             except StopIteration as e:
                 pass
-        self._gens = nextgens
+        self.__acts = nextacts
         
-    def toggle_loop(self):
-        self._loop = not self._loop
-        print 'toggle_loop:', self._loop
-        if self._loop:
+    def __toggle_loop(self):
+        self.__loop = not self.__loop
+        print 'toggle_loop:', self.__loop
+        if self.__loop:
             loop()
         else:
             noLoop()
+
+    def mousePressed(self):
+        self.__toggle_loop()
         
-scene_controller = SceneController()
+    def mysetup(self):
+        pass
 
-#----------------------------------------------------------------------------------------------
-#----------------------------------------------------------------------------------------------
+    def setup(self):
+        frameRate(self.fps)
+        self.mysetup()
 
-BG_COLOR_RGB = (0, 0, 0, 30)
+    def pre_draw(self):
+        pass
 
-_r3 = sqrt(3)
-
-def create_star6(w, color_prm, ang=0):
-    star = createShape(GROUP)
-    hw = w/2
-    hwr3 = hw * _r3
-    invhwr3 = hw / _r3
-    noStroke()
-    t1 = createShape(TRIANGLE, 0, 0, w, 0, hw, -hwr3)
-    t1.translate(-hw, invhwr3)
-    t1.setFill(color(*color_prm))
-    t2 = createShape(TRIANGLE, 0, 0, w, 0, hw, hwr3)
-    t2.translate(-hw, -invhwr3)
-    t2.setFill(color(*color_prm))
-    star.addChild(t1)
-    star.addChild(t2)
-    star.rotate(ang)
-    return star
-
-def fade_background():
-    noStroke()
-    blendMode(BLEND)
-    fill(*BG_COLOR_RGB)
-    rectMode(SCREEN)
-    rect(0, 0, width, height)
-    
-def create_light(isize, rPower, gPower, bPower):
-    center = isize / 2.0
-    img = createImage(isize, isize, RGB)
-    for y in xrange(isize):
-        for x in xrange(isize):
-            factor = 3*exp(-((sq(center - x) + sq(center - y))/sq(isize/5)))
-            r = int((255 * rPower) * factor)
-            g = int((255 * gPower) * factor)
-            b = int((255 * bPower) * factor)
-            img.pixels[x + y * isize] = color(r, g, b)
-    return img
-
-def particles(radius, oang, ostep, scl):
-    cnt = 500
-    for _ in xrange(cnt):
-        r = radius + (radius/0.5) * (randomGaussian() - 0.5)
-        o = oang - (ostep * random(4, 25))
-    	x, y = r * cos(o), r * sin(o)
-	w = scl * random(1, 4)
-	shape(star6, x, y, w, w)	
-
-def actor(lightimg, center_x, center_y, radius, stepangles):
-    xang = yang = 0
-    oang, ostep, xstep, ystep = stepangles
-    scl = 1.0
-    while True:
-        blendMode(LIGHTEST)
-        
-        pushMatrix()
-        translate(center_x, center_y)
-        rotateX(xang)
-        rotateY(yang)
-        #translate(radius*cos(oang), radius*sin(oang))
-        #rotateX(-xang)
-        #rotateY(-yang)
-        #scale(scl)
-        particles(radius, oang, ostep, scl)
-        popMatrix()
-        
-        pushMatrix()        
-        translate(center_x, center_y)
-        oang += ostep
-        xang += xstep
-        yang += ystep        
-        rotateX(xang)
-        rotateY(yang)
-        translate(radius*cos(oang), radius*sin(oang))
-        rotateY(-yang)
-        rotateX(-xang)
-        scale(scl)
-        image(lightimg, 0, 0)
-        popMatrix()
-        
-        if abs(oang) > 3*TWO_PI:
-            radius *= 0.99
-            scl *= 0.99
-            if scl < 0.05:
-                return
-        yield
-
-#----------------------------------------------------------------------------------------------
-#----------------------------------------------------------------------------------------------
-
+    def draw(self):
+        self.pre_draw()
+        self.__step()
+        if self.__save_frame:
+            saveFrame("frame-#####.tif")
+ 
 def setup():
-    #fullScreen(P3D)
-    size(400, 400, P3D)
-    hint(DISABLE_DEPTH_TEST)
-    blendMode(ADD)
-    imageMode(CENTER)
-    background(*BG_COLOR_RGB[:3])
-    global star6
-    star6 = create_star6(20, (120, 120, 120, 20), ang=HALF_PI/8)
-    scene_controller.add_generator(actor(create_light(100, 0.1, 0.5, 0.7),
-                                         200, 200, 130,
-                                         (HALF_PI, HALF_PI/40, 0.001, 0.005)))
-    scene_controller.add_generator(actor(create_light(80, 0.9, 0.1, 0.2),
-                                         200, 200, 110,
-                                         (PI, HALF_PI/43, -0.001, 0.002)))
-    scene_controller.add_generator(actor(create_light(50, 0.9, 0.9, 0.3),
-                                         200, 200, 110,
-                                         (-HALF_PI, -HALF_PI/30, -0.001, -0.002)))
-    
+    # [REMARK] The size() must be at first line of setup function.
+    size(*_size_params)
+    _controller_object.setup()
+
 def draw():
-    fade_background()
-    scene_controller.step()
-    #saveFrame("study02-####.tif")
+    _controller_object.draw()
 
 def mousePressed():
-    scene_controller.toggle_loop()
+    _controller_object.mousePressed()
+
+def fade_background(bgcolor=color(0,10)):
+    noStroke()
+    blendMode(BLEND)
+    fill(bgcolor)
+    rectMode(CORNER)
+    rect(0, 0, width, height)
+
+def curve3(x):
+    x = 2*x - 1
+    return 0.5 - x * (x*x - 3) / 4
+
+def curve5(x):
+    x3 = x * x * x
+    x4 = x3 * x
+    x5 = x4 * x
+    return 6*x5 - 15*x4 + 10*x3
+
+def range_curved(n, curve=curve5):
+    n -= 1
+    for i in xrange(n+1):
+        x = float(i)/n
+        y = curve(x)
+        yield i, y
+
+#----------------------------------------------------------------------------
+# application
+#----------------------------------------------------------------------------
+
+@setup_controller(600, 400, P2D, save_fps=0.0)
+class Controller(BaseController):
+
+    def mysetup(self):
+        pass
+
+    def pre_draw(self):
+        background(0)
+
+    @add_actor
+    def fog(self):
+        yield
