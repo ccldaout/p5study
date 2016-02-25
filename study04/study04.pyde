@@ -150,6 +150,7 @@ class Controller(BaseController):
         textAlign(CENTER, CENTER)
         self._b_ratio = 0.0
         self._fadeout = False
+        self._text_ready = False
 
     def pre_draw(self):
         background(0)
@@ -158,6 +159,10 @@ class Controller(BaseController):
     def camera(self):
         foc_x, foc_y, foc_z = width/2, height/2, 0
         eye_x, eye_y, eye_z = 0, height*0.8, 80
+        
+        camera(eye_x, eye_y, eye_z, foc_x, foc_y, foc_z, 0, 1, 0)
+        while not self._text_ready:
+            yield
 
         cnt = self.fps * 6
         for _, ratio in range_curved(cnt):
@@ -193,14 +198,23 @@ class Controller(BaseController):
 
     @add_actor
     def textobject(self):
-        cnt = 12
-        for n in xrange(cnt):
-            h = 350 - 40*self._b_ratio
-            s = 30+70*(n/float(cnt))
-            if self._fadeout:
-                b = 100*self._b_ratio
-            else:
-                b = 30 + 70*self._b_ratio
-            fill(color(h, s, b))
-            text("Happy Birthday", width/2, height*0.66, n)
-        return True
+        def draw_text(h, b, h_rate=0.66):
+            cnt = 12
+            for n in xrange(cnt):
+                s = 30+70*(n/float(cnt))
+                fill(color(h, s, b))
+                text("Happy Birthday", width/2, height*h_rate, n)
+            
+        cnt = self.fps*3
+        for _, r in range_curved(cnt):
+            draw_text(350, 30, 1 - (1-0.66)*r)
+            yield
+        self._text_ready = True
+        
+        while not self._fadeout:
+            draw_text(350 - 40*self._b_ratio, 30 + 70*self._b_ratio)
+            yield
+            
+        while True:
+            draw_text(350 - 40*self._b_ratio, 100*self._b_ratio)
+            yield
