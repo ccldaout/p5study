@@ -1,13 +1,8 @@
-#----------------------------------------------------------------------------------------------
-# common 
-#----------------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------
+# common - personal framework
+#----------------------------------------------------------------------------
 
-import inspect as _ins
 _ATTR_INITIAL_ACTOR = '_initial_actor_'
-
-SIZE_PARAMS = (300, 300, P2D)
-
-_controller_object = None
 
 def add_actor():
     n = [0]
@@ -18,20 +13,32 @@ def add_actor():
     return _add_actor
 add_actor = add_actor()
     
-def setup_controller(controller_class):
-    controller = controller_class()
-    global _controller_object
-    _controller_object = controller
-    return controller_class
-
+def setup_controller(width, height, mode=P2D, save_fps=0.0):
+    global _size_params
+    _size_params = (width, height, mode)
+    def _setup(controller_class):
+        controller = controller_class(save_fps)
+        global _controller_object
+        _controller_object = controller
+        return controller_class
+    return _setup
+    
 class BaseController(object):
-    def __new__(cls):
+    import inspect as __inspect
+    
+    def __new__(cls, save_fps):
         self = super(BaseController, cls).__new__(cls)
         self._loop = True
-        self.save_frame = False
+        if save_fps < 1.0:
+            self.fps = 10
+            self.__save_frame = False
+        else:
+            self.fps = save_fps
+            self.__save_frame = True
         self._acts = []
         def get_actors():
-            for _, attr in _ins.getmembers(self):
+            import inspect
+            for _, attr in self.__inspect.getmembers(self):
                 if hasattr(attr, _ATTR_INITIAL_ACTOR):
                     yield getattr(attr, _ATTR_INITIAL_ACTOR), attr
         for _, attr in sorted(list(get_actors())):
@@ -45,9 +52,9 @@ class BaseController(object):
             yield
         
     def add_actor(self, obj):
-        if _ins.isgenerator(obj):
+        if self.__inspect.isgenerator(obj):
             self._acts.append(obj)
-        elif _ins.isgeneratorfunction(obj):
+        elif self.__inspect.isgeneratorfunction(obj):
             self._acts.append(obj())
         elif callable(obj):
             self._acts.append(self.__generator(obj))
@@ -83,6 +90,7 @@ class BaseController(object):
         pass
 
     def setup(self):
+        frameRate(self.fps)
         self.mysetup()
 
     def pre_draw(self):
@@ -91,12 +99,12 @@ class BaseController(object):
     def draw(self):
         self.pre_draw()
         self.__step()
-        if self.save_frame:
-            saveFrame("frame-####.tif")
+        if self.__save_frame:
+            saveFrame("frame-#####.tif")
  
 def setup():
     # [REMARK] The size() must be at first line of setup function.
-    size(*SIZE_PARAMS)
+    size(*_size_params)
     _controller_object.setup()
 
 def draw():
@@ -123,11 +131,10 @@ def range_curved(n, curve=movement_curve):
         y = curve(x)
         yield i, y
 
-#----------------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------
 # application
-#----------------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------
 
-SIZE_PARAMS = (400, 400, P3D)
 BG_COLOR_RGB = (0, 0, 0, 30)
 
 _r3 = sqrt(3)
@@ -206,7 +213,7 @@ def actor(lightimg, center_x, center_y, radius, stepangles):
                 return
         yield
 
-@setup_controller
+@setup_controller(600, 400, P3D, save_fps=0.0)
 class Controller(BaseController):
 
     def mysetup(self):

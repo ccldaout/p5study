@@ -1,13 +1,8 @@
-#----------------------------------------------------------------------------------------------
-# common 
-#----------------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------
+# common - personal framework
+#----------------------------------------------------------------------------
 
-import inspect as _ins
 _ATTR_INITIAL_ACTOR = '_initial_actor_'
-
-SIZE_PARAMS = (300, 300, P2D)
-
-_controller_object = None
 
 def add_actor():
     n = [0]
@@ -18,20 +13,32 @@ def add_actor():
     return _add_actor
 add_actor = add_actor()
     
-def setup_controller(controller_class):
-    controller = controller_class()
-    global _controller_object
-    _controller_object = controller
-    return controller_class
-
+def setup_controller(width, height, mode=P2D, save_fps=0.0):
+    global _size_params
+    _size_params = (width, height, mode)
+    def _setup(controller_class):
+        controller = controller_class(save_fps)
+        global _controller_object
+        _controller_object = controller
+        return controller_class
+    return _setup
+    
 class BaseController(object):
-    def __new__(cls):
+    import inspect as __inspect
+    
+    def __new__(cls, save_fps):
         self = super(BaseController, cls).__new__(cls)
         self._loop = True
-        self.save_frame = False
+        if save_fps < 1.0:
+            self.fps = 10
+            self.__save_frame = False
+        else:
+            self.fps = save_fps
+            self.__save_frame = True
         self._acts = []
         def get_actors():
-            for _, attr in _ins.getmembers(self):
+            import inspect
+            for _, attr in self.__inspect.getmembers(self):
                 if hasattr(attr, _ATTR_INITIAL_ACTOR):
                     yield getattr(attr, _ATTR_INITIAL_ACTOR), attr
         for _, attr in sorted(list(get_actors())):
@@ -45,9 +52,9 @@ class BaseController(object):
             yield
         
     def add_actor(self, obj):
-        if _ins.isgenerator(obj):
+        if self.__inspect.isgenerator(obj):
             self._acts.append(obj)
-        elif _ins.isgeneratorfunction(obj):
+        elif self.__inspect.isgeneratorfunction(obj):
             self._acts.append(obj())
         elif callable(obj):
             self._acts.append(self.__generator(obj))
@@ -83,6 +90,7 @@ class BaseController(object):
         pass
 
     def setup(self):
+        frameRate(self.fps)
         self.mysetup()
 
     def pre_draw(self):
@@ -91,12 +99,12 @@ class BaseController(object):
     def draw(self):
         self.pre_draw()
         self.__step()
-        if self.save_frame:
-            saveFrame("frame-####.tif")
+        if self.__save_frame:
+            saveFrame("frame-#####.tif")
  
 def setup():
     # [REMARK] The size() must be at first line of setup function.
-    size(*SIZE_PARAMS)
+    size(*_size_params)
     _controller_object.setup()
 
 def draw():
@@ -123,24 +131,19 @@ def range_curved(n, curve=movement_curve):
         y = curve(x)
         yield i, y
 
-#----------------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------
 # application
-#----------------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------
 
-SIZE_PARAMS = (600, 400, P3D)
-
-@setup_controller
+@setup_controller(600, 400, P3D, save_fps=0.0)
 class Controller(BaseController):
 
     def mysetup(self):
-        self._fps = 10
-        frameRate(self._fps)
         blendMode(REPLACE)
         colorMode(HSB, 360, 100, 100)
         textFont(createFont("Edwardian Script ITC", 90))
         textMode(SHAPE)
         textAlign(CENTER, CENTER)
-        #self.save_frame = True
         self._b_ratio = 0.0
         self._fadeout = False
 
@@ -152,20 +155,20 @@ class Controller(BaseController):
         foc_x, foc_y, foc_z = width/2, height/2, 0
         eye_x, eye_y, eye_z = 0, height*0.8, 80
 
-        cnt = self._fps * 6
+        cnt = self.fps * 6
         for _, ratio in range_curved(cnt):
             eye_x = width * ratio
             camera(eye_x, eye_y, eye_z, foc_x, foc_y, foc_z, 0, 1, 0)
             yield
 
-        cnt = self._fps * 3
+        cnt = self.fps * 3
         for _, ratio in range_curved(cnt):
             eye_x = width * (1 - 0.5 * ratio)
             eye_y = height*0.8 * (1 - ratio)
             camera(eye_x, eye_y, eye_z, foc_x, foc_y, foc_z, 0, 1, 0)
             yield
 
-        cnt = self._fps * 6
+        cnt = self.fps * 6
         inifoc_y = foc_y
         endfoc_y = height*0.7 
         for _, ratio in range_curved(cnt):
@@ -176,10 +179,10 @@ class Controller(BaseController):
             camera(eye_x, eye_y, eye_z, foc_x, foc_y, foc_z, 0, 1, 0)
             yield
         
-        for _ in xrange(self._fps * 2):
+        for _ in xrange(self.fps * 2):
             yield
         self._fadeout = True
-        cnt = self._fps * 6
+        cnt = self.fps * 6
         for _, ratio in range_curved(cnt):
             self._b_ratio = 1 - ratio
             yield
