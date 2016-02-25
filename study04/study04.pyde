@@ -28,14 +28,14 @@ class BaseController(object):
     
     def __new__(cls, save_fps):
         self = super(BaseController, cls).__new__(cls)
-        self._loop = True
+        self.__loop = True
         if save_fps < 1.0:
             self.fps = 10
             self.__save_frame = False
         else:
             self.fps = save_fps
             self.__save_frame = True
-        self._acts = []
+        self.__acts = []
         def get_actors():
             import inspect
             for _, attr in self.__inspect.getmembers(self):
@@ -46,24 +46,22 @@ class BaseController(object):
         return self
 
     def __generator(self, func):
-        while True:
-            if not func():
-                return
+        while func():
             yield
         
     def add_actor(self, obj):
         if self.__inspect.isgenerator(obj):
-            self._acts.append(obj)
+            self.__acts.append(obj)
         elif self.__inspect.isgeneratorfunction(obj):
-            self._acts.append(obj())
+            self.__acts.append(obj())
         elif callable(obj):
-            self._acts.append(self.__generator(obj))
+            self.__acts.append(self.__generator(obj))
         else:
             raise Exception('obj must be one of generator/generator function/function')
         
     def __step(self):
         nextacts = []
-        for gen in self._acts:
+        for gen in self.__acts:
             try:
                 ret = gen.next()
                 nextacts.append(gen)
@@ -73,12 +71,12 @@ class BaseController(object):
                     nextacts.append(ret)
             except StopIteration as e:
                 pass
-        self._acts = nextacts
+        self.__acts = nextacts
         
     def __toggle_loop(self):
-        self._loop = not self._loop
-        print 'toggle_loop:', self._loop
-        if self._loop:
+        self.__loop = not self.__loop
+        print 'toggle_loop:', self.__loop
+        if self.__loop:
             loop()
         else:
             noLoop()
