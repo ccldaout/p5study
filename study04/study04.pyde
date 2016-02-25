@@ -118,11 +118,17 @@ def fade_background(bgcolor=color(0,10)):
     rectMode(CORNER)
     rect(0, 0, width, height)
 
-def movement_curve(x):
+def curve3(x):
     x = 2*x - 1
     return 0.5 - x * (x*x - 3) / 4
 
-def range_curved(n, curve=movement_curve):
+def curve5(x):
+    x3 = x * x * x
+    x4 = x3 * x
+    x5 = x4 * x
+    return 6*x5 - 15*x4 + 10*x3
+
+def range_curved(n, curve=curve5):
     n -= 1
     for i in xrange(n+1):
         x = float(i)/n
