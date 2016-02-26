@@ -142,39 +142,27 @@ def range_curved(n, curve=curve5):
 @setup_controller(600, 400, P2D, save_fps=0.0)
 class Controller(BaseController):
 
-    def make_fog(self, h, xcyccnt, ycyccnt, rot):
+    def make_img(self):
+        # h:240, s:5..10, b:85..100
         img = createImage(width, height, ARGB)
         colorMode(HSB, 360, 100, 100)
-        xfact = TWO_PI / (width / xcyccnt)
-        yfact = TWO_PI / (height / ycyccnt)
-        cr = cos(rot)
-        sr = sin(rot)
-        for yy in xrange(height):
-            for xx in xrange(width):
-                x =  xx * cr + yy * sr
-                y = -xx * cr + yy * sr
-                sv = (sin(xfact * x * (0.9 + 0.1*noise(x))) +
-                      cos(yfact * y * (0.9 + 0.1*noise(y))))
-                s = 5 + 10 * sv
-                b = 50 + 30 * sv * random(1)  
-                img.pixels[yy * width + xx] = color(h, s, b, 50)
+
+        for y in xrange(height):
+            for x in xrange(width):
+                img.pixels[y * width + x] = color(240, 100, 100, 50)
+
         return img
             
     def mysetup(self):
-        self.img1 = self.make_fog(241, 2, 2, TWO_PI/20)
-        self.img2 = self.make_fog(242, 3, 3, TWO_PI/15)
-        self.img3 = self.make_fog(243, 4, 3, TWO_PI/9)
+        self.img = self.make_img()
 
     def pre_draw(self):
         background(0)
 
     @add_actor
-    def fog(self):
+    def draw_img(self):
         while True:
-            # h:240, s:5..10, b:85..100
             blendMode(BLEND)
             imageMode(CORNER)
-            image(self.img1, 0, 0)
-            image(self.img2, 0, 0)
-            image(self.img3, 0, 0)
+            image(self.img, 0, 0)
             yield
