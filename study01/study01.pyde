@@ -142,18 +142,26 @@ def range_curved(n, curve=curve5):
 @setup_controller(600, 400, P2D, save_fps=0.0)
 class Controller(BaseController):
 
-    def make_fog(self):
+    def make_fog(self, h, xcyccnt, rot):
         img = createImage(width, height, ARGB)
         colorMode(HSB, 360, 100, 100)
-        for i in xrange(width * height):
-            img.pixels[i] = color(240,
-                                  random(5,10),
-                                  random(85, 100),
-                                  50)
+        radfact = TWO_PI / (width / xcyccnt)
+        cr = cos(rot)
+        sr = sin(rot)
+        for yy in xrange(height):
+            for xx in xrange(width):
+                x =  xx * cr + yy * sr
+                y = -xx * cr + yy * sr
+                sv = sin(radfact * x)
+                s = 5 + 5 * sv
+                b = 85 + 15 * sv * noise(x, y)          
+                img.pixels[yy * width + xx] = color(h, s, b)
         return img
             
     def mysetup(self):
-        self.fog_image = self.make_fog()
+        self.img1 = self.make_fog(240, 8, TWO_PI/16)
+        self.img2 = self.make_fog(242, 20, TWO_PI/32)
+        self.img3 = self.make_fog(238, 3, TWO_PI/20)
 
     def pre_draw(self):
         background(0)
@@ -162,7 +170,9 @@ class Controller(BaseController):
     def fog(self):
         while True:
             # h:240, s:5..10, b:85..100
-            blendMode(BLEND)
+            blendMode(REPLACE)
             imageMode(CORNER)
-            image(self.fog_image, 0, 0)
+            image(self.img1, 0, 0)
+            image(self.img2, 0, 0)
+            image(self.img3, 0, 0)
             yield
