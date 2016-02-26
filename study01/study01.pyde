@@ -153,15 +153,15 @@ class Controller(BaseController):
                 x =  xx * cr + yy * sr
                 y = -xx * cr + yy * sr
                 sv = sin(radfact * x)
-                s = 5 + 5 * sv
-                b = 85 + 15 * sv * noise(x, y)          
-                img.pixels[yy * width + xx] = color(h, s, b)
+                s = 5 + 10 * sv * noise(sv)
+                b = 50 + 30 * sv * noise(xx, yy)          
+                img.pixels[yy * width + xx] = color(h, s, b, 50)
         return img
             
     def mysetup(self):
-        self.img1 = self.make_fog(240, 8, TWO_PI/16)
-        self.img2 = self.make_fog(242, 20, TWO_PI/32)
-        self.img3 = self.make_fog(238, 3, TWO_PI/20)
+        self.img1 = self.make_fog(241, 10, TWO_PI/16)
+        self.img2 = self.make_fog(242, 11, TWO_PI/32)
+        self.img3 = self.make_fog(243, 12, TWO_PI/9)
 
     def pre_draw(self):
         background(0)
@@ -170,7 +170,7 @@ class Controller(BaseController):
     def fog(self):
         while True:
             # h:240, s:5..10, b:85..100
-            blendMode(REPLACE)
+            blendMode(BLEND)
             imageMode(CORNER)
             image(self.img1, 0, 0)
             image(self.img2, 0, 0)
