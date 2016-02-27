@@ -139,23 +139,37 @@ def range_curved(n, curve=curve5):
 # application
 #----------------------------------------------------------------------------
 
+import array
+
 @setup_controller(600, 400, P2D, save_fps=0.0)
 class Controller(BaseController):
 
+    def init_pxv(self):
+        r = 1.0
+        xz, yz = width, height
+        xw, yw = xz * r, yz * r
+        pxv = array.array('l', (0 for _ in xrange(xz * yz)))
+        for y in xrange(yz):
+            for x in xrange(xz):
+                pxv[y * xz + x] = color(255*noise(float(x)/xw,
+                                                  float(y)/yw))
+        return pxv
+
+    def update_pxv(self):
+        pass
+        
     def make_img(self):
         # h:240, s:5..10, b:85..100
         xz, yz = width, height
         img = createImage(xz, yz, ARGB)
         colorMode(HSB, 360, 100, 100)
-        for y in xrange(yz):
-            self.y += 0.01
-            for x in xrange(xz):
-                self.x += 0.01
-                img.pixels[y * xz + x] = color(255*noise(self.x, self.y))
+        for i in xrange(len(self.pxv)):
+            img.pixels[i] = self.pxv[i]
         return img
             
     def mysetup(self):
-        self.x = self.y = 0
+        self.pxv = self.init_pxv()
+        pass
 
     def pre_draw(self):
         background(0)
