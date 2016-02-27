@@ -144,13 +144,14 @@ class Controller(BaseController):
 
     def make_img(self):
         # h:240, s:5..10, b:85..100
-        img = createImage(width, height, ARGB)
+        xz = width*2 + 1
+        yz = height*2 + 1
+        img = createImage(xz, yz, ARGB)
         colorMode(HSB, 360, 100, 100)
-
-        for y in xrange(height):
-            for x in xrange(width):
-                img.pixels[y * width + x] = color(240, 100, 100, 50)
-
+        for y in xrange(yz):
+            for x in xrange(xz):
+                img.pixels[y * xz + x] = color(255*noise(float(x)/200.0,
+                                                         float(y)/50.0))
         return img
             
     def mysetup(self):
@@ -161,8 +162,9 @@ class Controller(BaseController):
 
     @add_actor
     def draw_img(self):
+        x, y = width/2, height/2
         while True:
             blendMode(BLEND)
-            imageMode(CORNER)
-            image(self.img, 0, 0)
+            imageMode(CENTER)
+            image(self.img, x, y)
             yield
