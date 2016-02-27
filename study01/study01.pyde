@@ -145,14 +145,16 @@ import array
 class Controller(BaseController):
 
     def init_pxv(self):
-        r = 1.0
+        r = 0.2
         xz, yz = width, height
         xw, yw = xz * r, yz * r
-        pxv = array.array('l', (0 for _ in xrange(xz * yz)))
+        pxv = [None] * height
+        for i in xrange(yz):
+            pxv[i] = array.array('l', (0 for _ in xrange(xz)))
         for y in xrange(yz):
             for x in xrange(xz):
-                pxv[y * xz + x] = color(255*noise(float(x)/xw,
-                                                  float(y)/yw))
+                pxv[y][x] = color(255*noise(float(x)/xw,
+                                            float(y)/yw))
         return pxv
 
     def update_pxv(self):
@@ -163,8 +165,9 @@ class Controller(BaseController):
         xz, yz = width, height
         img = createImage(xz, yz, ARGB)
         colorMode(HSB, 360, 100, 100)
-        for i in xrange(len(self.pxv)):
-            img.pixels[i] = self.pxv[i]
+        for y in xrange(len(self.pxv)):
+            for x in xrange(xz):
+                img.pixels[y * xz + x] = self.pxv[y][x]
         return img
             
     def mysetup(self):
@@ -179,6 +182,7 @@ class Controller(BaseController):
         while True:
             blendMode(BLEND)
             imageMode(CORNER)
+            self.update_pxv()
             img = self.make_img()
             image(img, 0, 0)
             yield
